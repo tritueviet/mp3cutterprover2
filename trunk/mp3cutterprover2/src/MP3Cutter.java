@@ -77,7 +77,7 @@ public class MP3Cutter extends MIDlet
     }
 
     public void startApp() {
-        System.out.println("startApp");
+        //System.out.println("startApp");
         FileSystemAccessor localFileSystemAccessor = new FileSystemAccessor(this.nameT);
         String str = this.nameT;
         int i;
@@ -115,7 +115,7 @@ public class MP3Cutter extends MIDlet
         this.myList.addCommand(this.aboutHelp);
 
         this.myList.addCommand(this.okey);
-        this.myList.addCommand(this.cutscr);
+        //this.myList.addCommand(this.cutscr);
         this.myList.addCommand(this.exitMidlet);
         this.myList.setSelectCommand(this.okey);
         this.myList.setCommandListener(this);
@@ -125,7 +125,7 @@ public class MP3Cutter extends MIDlet
     public void commandAction(Command paramCommand, Displayable paramDisplayable) {
         String str2;
         Object localObject;
-        
+
         if (paramCommand == this.aboutHelp) {
             Display.getDisplay(this).setCurrent(new Alert("About & Help", "MP3 Cutter Pro \n  ver 2.1 deverloper name: vu van tuong\n\n You can select music files mp3 and music selection cut desired time!  ", null, AlertType.INFO));
 
@@ -133,15 +133,40 @@ public class MP3Cutter extends MIDlet
             destroyApp(false);
             notifyDestroyed();
         } else if (paramCommand == this.okey) {
+            System.out.println(" click folder");
             String str1 = this.files[this.myList.getSelectedIndex()];
-            str1 = str1.substring(str1.length() - 1, str1.length());
-            if (str1.equals("/")) {
+            if (str1.endsWith("/")) {
                 this.nameT += this.files[this.myList.getSelectedIndex()];
                 System.out.println("OK: nameT = " + this.nameT);
                 startApp();
+            } else if (str1.endsWith(".mp3") || str1.endsWith(".MP3") || str1.endsWith(".arm") || str1.endsWith(".wav")) {
+
+                localObject = new Form("MP3 Cutter");
+                gaProgress = new Gauge("Play Progress", false, 100, 1);
+                ((Form) localObject).append(gaProgress);
+                setMp3();
+                this.tNameFile = new TextField("files: ", this.nameT + this.files[this.myList.getSelectedIndex()], 255, 0);
+                this.tBitrate = new TextField("rate quality (kb/s)", "128", 3, 2);
+                this.tBegin = new TextField("start time (s)", "0", 255, 2);
+                this.tEnd = new TextField("end time (s)", "10", 255, 2);
+                ((Form) localObject).append(this.tNameFile);
+                ((Form) localObject).append(this.tBitrate);
+                ((Form) localObject).append(this.tBegin);
+                ((Form) localObject).append(this.tEnd);
+                ((Form) localObject).addCommand(this.index);
+                ((Form) localObject).addCommand(this.cut);
+                ((Form) localObject).addCommand(this.cmdReplay);
+                ((Form) localObject).addCommand(this.cmdGetStart);
+                ((Form) localObject).addCommand(this.cmdGetEnd);
+
+
+                ((Form) localObject).setCommandListener(this);
+                this.mydisplay.setCurrent((Displayable) localObject);
+                System.gc();
             }
+
         } else if (paramCommand == this.back) {
-            sound=1;
+            sound = 1;
             if (this.nameT.length() < 5) {
                 this.nameT = "";
             } else {
@@ -155,42 +180,20 @@ public class MP3Cutter extends MIDlet
             System.out.println("BACK: nameT = " + this.nameT);
             startApp();
         } else if (paramCommand == this.cutscr) {
-            localObject = new Form("MP3 Cutter");
-            gaProgress = new Gauge("Play Progress", false, 100, 1);
-            ((Form) localObject).append(gaProgress);
-            setMp3();
-            this.tNameFile = new TextField("files: ", this.nameT + this.files[this.myList.getSelectedIndex()], 255, 0);
-            this.tBitrate = new TextField("rate quality (kb/s)", "128", 3, 2);
-            this.tBegin = new TextField("start time (s)", "0", 255, 2);
-            this.tEnd = new TextField("end time (s)", "10", 255, 2);
-            ((Form) localObject).append(this.tNameFile);
-            ((Form) localObject).append(this.tBitrate);
-            ((Form) localObject).append(this.tBegin);
-            ((Form) localObject).append(this.tEnd);
-            ((Form) localObject).addCommand(this.index);
-            ((Form) localObject).addCommand(this.cut);
-            ((Form) localObject).addCommand(this.cmdReplay);
-            ((Form) localObject).addCommand(this.cmdGetStart);
-            ((Form) localObject).addCommand(this.cmdGetEnd);
-
-
-            ((Form) localObject).setCommandListener(this);
-            this.mydisplay.setCurrent((Displayable) localObject);
-            System.gc();
         } else if (paramCommand == this.index) {
-            sound=1;
+            sound = 1;
             startApp();
         } else if (paramCommand == this.cmdGetStart) {
-            tBegin.setString(gaProgress.getValue()+"");
+            tBegin.setString(gaProgress.getValue() + "");
         } else if (paramCommand == this.cmdGetEnd) {
-            tEnd.setString(gaProgress.getValue()+"");
+            tEnd.setString(gaProgress.getValue() + "");
         } else if (paramCommand == this.cmdReplay) {
             setMp3();
-            
+
         } else if (paramCommand == this.cut) {
-            
+
             try {
-                sound=1;
+                sound = 1;
                 str2 = this.nameT + this.files[this.myList.getSelectedIndex()];
                 localObject = str2.substring(0, str2.length() - 4) + "_cut.mp3";
                 System.out.println((String) localObject);
@@ -218,7 +221,7 @@ public class MP3Cutter extends MIDlet
             System.out.println("total time --- " + mp3.getDuration() / 1000000 + " s");
             gaProgress.setMaxValue((int) (mp3.getDuration() / 1000000));
             gaProgress.setValue(1);
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -227,26 +230,26 @@ public class MP3Cutter extends MIDlet
     private class DownloadTimer extends TimerTask {
 
         public final void run() {
-            if(mp3!=null){
-            try {
-                if (sound == 0) {
-                    mp3.realize();
-                    mp3.prefetch();
-                    mp3.start();
-                    mp3.setLoopCount(-1);
-                } else {
-                    mp3.close();
-                   // mp3=null;
-                    System.gc();
+            if (mp3 != null) {
+                try {
+                    if (sound == 0) {
+                        mp3.realize();
+                        mp3.prefetch();
+                        mp3.start();
+                        mp3.setLoopCount(-1);
+                    } else {
+                        mp3.close();
+                        // mp3=null;
+                        System.gc();
+                    }
+                } catch (Exception e) {
                 }
-            } catch (Exception e) {
-            }
             }
 
-            if (gaProgress.getValue() +1< gaProgress.getMaxValue()) {
-                
+            if (gaProgress.getValue() + 1 < gaProgress.getMaxValue()) {
+
                 try {
-                    gaProgress.setLabel("Playing...     "+ (int) (mp3.getMediaTime() / 1000000)+" s/ "+mp3.getDuration()/1000000+ " (s)");
+                    gaProgress.setLabel("Playing...     " + (int) (mp3.getMediaTime() / 1000000) + " s/ " + mp3.getDuration() / 1000000 + " (s)");
 
                     System.out.println("------: " + (int) mp3.getMediaTime());
                     gaProgress.setValue((int) (mp3.getMediaTime() / 1000000));
